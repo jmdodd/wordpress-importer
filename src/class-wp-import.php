@@ -654,7 +654,10 @@ class WP_Import extends WP_Importer {
 			}
 
 			if ( 'nav_menu_item' == $post['post_type'] ) {
-				$this->process_menu_item( $post );
+				$post = apply_filters( 'wp_import_nav_menu_item', $post );
+				if ( ! empty( $post ) ) {
+					$this->process_menu_item( $post );
+				}
 				continue;
 			}
 
