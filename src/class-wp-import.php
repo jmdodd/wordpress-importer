@@ -676,7 +676,7 @@ class WP_Import extends WP_Importer {
 				if ( $post_exists && get_post_type( $post_exists ) == $post['post_type'] ) {
 					printf( __( '%1$s &#8220;%2$s&#8221; already exists.', 'wordpress-importer' ), $post_type_object->labels->singular_name, esc_html( $post['post_title'] ) );
 					echo '<br />';
-					$this->processed_menu_items[ intval( $item['post_id'] ) ] = intval( $post_exists );
+					$this->processed_menu_items[ intval( $post['post_id'] ) ] = intval( $post_exists );
 				} else {
 					$this->process_menu_item( $post );
 				}
