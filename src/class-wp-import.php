@@ -653,14 +653,6 @@ class WP_Import extends WP_Importer {
 				continue;
 			}
 
-			if ( 'nav_menu_item' == $post['post_type'] ) {
-				$post = apply_filters( 'wp_import_nav_menu_item', $post );
-				if ( ! empty( $post ) ) {
-					$this->process_menu_item( $post );
-				}
-				continue;
-			}
-
 			$post_type_object = get_post_type_object( $post['post_type'] );
 
 			$post_exists = post_exists( $post['post_title'], '', $post['post_date'] );
@@ -678,6 +670,18 @@ class WP_Import extends WP_Importer {
 			* @param array $post         The post array to be inserted.
 			*/
 			$post_exists = apply_filters( 'wp_import_existing_post', $post_exists, $post );
+
+			if ( 'nav_menu_item' == $post['post_type'] ) {
+				$post = apply_filters( 'wp_import_nav_menu_item', $post, $post_exists );
+				if ( $post_exists && get_post_type( $post_exists ) == $post['post_type'] ) {
+					printf( __( '%1$s &#8220;%2$s&#8221; already exists.', 'wordpress-importer' ), $post_type_object->labels->singular_name, esc_html( $post['post_title'] ) );
+					echo '<br />';
+					$this->processed_menu_items[ intval( $item['post_id'] ) ] = intval( $post_exists );
+				} else {
+					$this->process_menu_item( $post );
+				}
+				continue;
+			}
 
 			if ( $post_exists && get_post_type( $post_exists ) == $post['post_type'] ) {
 				printf( __( '%1$s &#8220;%2$s&#8221; already exists.', 'wordpress-importer' ), $post_type_object->labels->singular_name, esc_html( $post['post_title'] ) );
@@ -957,6 +961,12 @@ class WP_Import extends WP_Importer {
 			$menu_id = is_array( $menu_id ) ? $menu_id['term_id'] : $menu_id;
 		}
 
+		if ( isset( $item['ID'] ) ) {
+			$menu_item_db_id = $item['ID'];
+		} else {
+			$menu_item_db_id = 0;
+		}
+
 		foreach ( $item['postmeta'] as $meta ) {
 			${$meta['key']} = $meta['value'];
 		}
@@ -1000,7 +1010,7 @@ class WP_Import extends WP_Importer {
 			'menu-item-status'      => $item['status'],
 		);
 
-		$id = wp_update_nav_menu_item( $menu_id, 0, $args );
+		$id = wp_update_nav_menu_item( $menu_id, $menu_item_db_id, $args );
 		if ( $id && ! is_wp_error( $id ) ) {
 			$this->processed_menu_items[ intval( $item['post_id'] ) ] = (int) $id;
 		}
